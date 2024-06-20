@@ -1,0 +1,701 @@
+<html>
+<head>
+	<title>音乐播放器 耐心等待内嵌式网页的相应 大约两到三秒</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8"">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+	<style>
+		body {
+			background-color: #f5f5f5;
+			font-family: Arial, sans-serif;
+			margin: 0;
+			padding: 0;
+			font-family: 'Arial', sans-serif;
+            background-image: url(''); /* 替换为你的背景图片路径 */
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+		}
+		
+		#player-container {
+  overflow: auto; /* 如果内容超出，显示滚动条 */
+}
+
+		#player-entirety {
+			height: 100vh;
+			width: 100vw;
+			background-color: rgba(0,0,0,);
+			position: fixed;
+			transition: top 400ms;
+			z-index: 10001;
+		}
+
+		#player-entirety[oc=open] {
+			top: 0vh;
+		}
+
+		#player-entirety[oc=close] {
+			top: -100vh;
+		}
+
+		#close-botton::before {
+			content: "\00d7";
+		}
+
+		#close-botton {
+			position: absolute;
+			top: 0px;
+			right: 0px;
+			padding: 3px 250px;
+			background-color: skyblue;
+		}
+
+		#close-botton:hover {
+			background-color: #e00;
+		}
+
+		#close-botton:active {
+			background-color: #c33;
+		}
+
+		#player-container {
+			overflow: hidden;
+			background-color: #fff;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			margin: 20px;
+			padding: 20px;
+			position: relative;
+		}
+
+		h1 {
+			text-align: center;
+			margin: 0 0 20px;
+		}
+
+		#music-info {
+			display: flex;
+			align-items: center;
+			margin-bottom: 20px;
+		}
+
+		#music-cover {
+			background-color: #ccc;
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: cover;
+			border-radius: 50%;
+			height: 100px;
+			width: 100px;
+			animation: cover-rotate 10s linear 0s infinite normal forwards;
+		}
+
+		@keyframes cover-rotate {
+			0% {
+				transform: rotate(0deg);
+			}
+			100% {
+				transform: rotate(360deg);
+			}
+		}
+
+		#music-details {
+			margin-left: 20px;
+		}
+
+		#music-title {
+			font-size: 18px;
+			font-weight: bold;
+			margin-bottom: 5px;
+		}
+
+		#music-artist {
+			font-size: 14px;
+			color: #888;
+		}
+
+		#controls {
+			display: flex;
+			justify-content: center;
+			margin-bottom: 20px;
+		}
+
+		button {
+			background-color: #fff;
+			border: none;
+			border-radius: 50%;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			color: #555;
+			cursor: pointer;
+			font-size: 24px;
+			height: 50px;
+			margin: 0 10px;
+			width: 50px;
+		}
+
+		#progress-bar {
+			background-color: #eee;
+			border-radius: 4px;
+			height: 4px;
+			position: relative;
+			cursor: pointer;
+		}
+
+		#progress-bar-fill {
+			background-color: #555;
+			border-radius: 4px;
+			height: 100%;
+			width: 0;
+		}
+
+		#progress-bar-thumb {
+			background-color: #555;
+			border-radius: 50%;
+			height: 12px;
+			width: 12px;
+			position: absolute;
+			top: -4px;
+			transform: translateX(-50%);
+			z-index: 2;
+		}
+
+		#playerOpen {
+			width: 30px;
+			height: 50px;
+			background: #62f;
+			padding-top: 34px;
+			text-align: center;
+			position: fixed;
+			bottom: 50px;
+			transition: left 400ms;
+			z-index: 10000;
+		}
+
+		#player-entirety[oc=close] #playerOpen {
+			left: 0px;
+		}
+
+		#player-entirety[oc=open] #playerOpen {
+			left: -30px;
+		}
+
+		#playerOpen::before {
+			content: '\003e';
+			font-weight: bold;
+			color: #fff;
+		}
+		
+		#video-bg {
+             position: fixed;
+             right: 0;
+             bottom: 0;
+             min-width: 100%; 
+             min-height: 100%;
+             width: auto; 
+             height: auto;
+             z-index: -1; /* 确保视频在其他内容的后面 */
+        }
+	</style>
+<style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+    }
+    .particle {
+      position: absolute;
+      color: #f00; /* 粒子颜色 */
+      font-size: 24px; /* 字体大小 */
+      opacity: 0; /* 初始不透明度 */
+      transform: scale(1); /* 初始大小 */
+      animation: fadeOutAndScale 3s ease-in forwards; /* 动画持续时间5秒，ease-in淡入效果 */
+      pointer-events: none; /* 忽略粒子的鼠标事件 */
+    }
+    @keyframes fadeOutAndScale {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: scale(1.5); /* 淡出时放大 */
+      }
+    }
+  </style>
+</head>
+<h1请耐心等待加载</h1>
+<body id="v1">
+<video autoplay muted loop id="video-bg">
+  <source src="125.mp4" type="video/mp4">
+  Your browser does not support HTML5 video.
+</video>
+	<div id="player-entirety" oc="close">
+		<div id="player-container">
+			<span id="close-botton"></span>
+			<h1 id="v2">音乐播放器</h1>
+			<div id="music-info">
+				<div id="music-cover" style="background-image: url(&quot;cover1.jpg&quot;);"></div>
+				<div id="music-details">
+					<div id="music-title">
+						歌曲1
+					</div>
+					<div id="music-artist">
+						歌手1
+					</div>
+					<div id="music-progress">
+						00:00/00:00
+					</div>
+				</div>
+			</div>
+			<div id="controls">
+				<button id="prev-button"><i id="v3" class="fas fa-backward"></i></button>
+				<button id="play-button"><i class="fas fa-play"></i></button>
+				<button id="next-button"><i id="v5" class="fas fa-forward"></i></button>
+			</div>
+			<div id="progress-bar">
+				<div id="progress-bar-fill"></div>
+				<div id="progress-bar-thumb"></div>
+			</div>
+		</div>
+		<div id="playerOpen"></div>
+		<script>
+			// 音乐列表
+			var playlist = [
+				{
+					title: "歌曲1",
+					artist: "歌手1",
+					src: "https://cloud.blankwings.net/api/v3/file/get/2534/C400000C0qUQ2OMq7N.mp3?sign=qs-Lg08TsktdOfhjRnwHhu3AGNFOupmcM_dd4mFRf6Y%3D%3A0",
+					cover: "0.gif"
+				},
+				{
+					title: "歌曲2",
+					artist: "歌手2",
+					src: "https://cloud.blankwings.net/api/v3/file/get/2535/visions_-_qq%E9%9F%B3%E4%B9%90.mp3?sign=OhidZEEPZ614nYTupOwwZ8pfXZvSZczZ2We6SxjO388%3D%3A0",
+					cover: "10.gif"
+				},
+				{
+					title: "歌曲",
+					artist: "歌手2",
+					src: "1.mp3",
+					cover: "1.jpg"
+				},
+				// 更多歌曲...
+			];
+			//歌曲索引
+			var currentSong = function(){
+				var currentSong_get_cirrentSong_function_var = localStorage.getItem("currentSong");
+				if(currentSong_get_cirrentSong_function_var >= playlist.length || currentSong_get_cirrentSong_function_var == undefined || currentSong_get_cirrentSong_function_var == null){
+					return 0;
+				}else{
+					return localStorage.getItem("currentSong");
+				}
+			}();
+			var audio = new Audio();
+			var progressBarFill = document.getElementById("progress-bar-fill");
+			var progressBar = document.getElementById("progress-bar");
+			var progressBarThumb = document.getElementById("progress-bar-thumb");
+			var isDragging = false;
+	
+			// 初始化音乐信息
+			function initMusicInfo() {
+				var musicCover = document.getElementById("music-cover");
+				var musicTitle = document.getElementById("music-title");
+				var musicArtist = document.getElementById("music-artist");
+	
+				musicCover.style.backgroundImage = "url(" + playlist[currentSong].cover + ")";
+				musicTitle.textContent = playlist[currentSong].title;
+				musicArtist.textContent = playlist[currentSong].artist;
+			}
+	
+			// 播放音乐
+			function playMusic() {
+				var playButton = document.getElementById("play-button");
+				playButton.innerHTML = "<i class='fas fa-pause'></i>";
+				audio.src = playlist[currentSong].src;
+				audio.currentTime = localStorage.getItem("currentProgress") || 0;
+				audio.play();
+				localStorage.setItem("currentSong", currentSong);
+				document.getElementById("music-cover").style.animationPlayState = "";
+				if(audio.paused){
+					alert("您的浏览器似乎不支持自动播放，请点击播放按钮手动播放");
+					playButton.innerHTML = "<i class='fas fa-play'></i>";
+					document.getElementById("music-cover").style.animationPlayState = "paused";
+				}
+			}
+	
+			// 暂停音乐
+			function pauseMusic() {
+				var playButton = document.getElementById("play-button");
+				playButton.innerHTML = "<i class='fas fa-play'></i>";
+				audio.pause();
+				document.getElementById("music-cover").style.animationPlayState = "paused";
+				localStorage.setItem("currentProgress", audio.currentTime);
+			}
+	
+			// 上一首
+			function prevSong() {
+				if (currentSong === 0) {
+					currentSong = playlist.length - 1;
+				} else {
+					currentSong--;
+				}
+	
+				localStorage.setItem("currentProgress", 0);
+				initMusicInfo();
+				playMusic();
+			}
+	
+			// 下一首
+			function nextSong() {
+				if (currentSong === playlist.length - 1) {
+					currentSong = 0;
+				} else {
+					currentSong++;
+				}
+	
+				localStorage.setItem("currentProgress", 0);
+				initMusicInfo();
+				playMusic();
+			}
+	
+			// 更新进度条
+			function updateProgressBar() {
+				var progress = ((audio.currentTime / audio.duration) * 100) + "%";
+				progressBarFill.style.width = progress;
+				progressBarThumb.style.left = progress;
+				document.getElementById("music-progress").innerText = function(){
+					return ((Math.floor(audio.currentTime / 60).toString().padStart(2, '0') + ":" + Math.floor(audio.currentTime % 60).toString().padStart(2, '0')) + "/" + (Math.floor(audio.duration / 60).toString().padStart(2, '0') + ":" + Math.floor(audio.duration % 60).toString().padStart(2, '0')));
+				}()
+				if(audio.currentTime === audio.duration){
+					nextSong();
+				}
+			}
+	
+			// 拖动进度条
+			function dragProgressBar(event) {
+				if (isDragging) {
+					var position = event.clientX - progressBar.getBoundingClientRect().left;
+					var progress = (position / progressBar.offsetWidth) * 100;
+					progressBarFill.style.width = progress + "%";
+					progressBarThumb.style.left = progress + "%";
+				}
+			}
+	
+			// 开始拖动
+			progressBarThumb.addEventListener("mousedown", function(event) {
+				isDragging = true;
+			});
+	
+			// 停止拖动
+			window.addEventListener("mouseup", function() {
+				if (isDragging) {
+					var position = event.clientX - progressBar.getBoundingClientRect().left;
+					var progress = (position / progressBar.offsetWidth) * audio.duration;
+					audio.currentTime = progress;
+					isDragging = false;
+				}
+			});
+
+			// 初始化音乐播放器
+			function initPlayer() {
+				// 恢复之前保存的播放歌曲和进度
+				currentSong = function(){
+				var currentSong_get_cirrentSong_function_var = localStorage.getItem("currentSong");
+				if(currentSong_get_cirrentSong_function_var >= playlist.length || currentSong_get_cirrentSong_function_var == undefined || currentSong_get_cirrentSong_function_var == null){
+					return 0;
+				}else{
+					return parseInt(localStorage.getItem("currentSong"));
+				}
+			}();
+				initMusicInfo();
+
+				// 绑定按钮事件
+				var playButton = document.getElementById("play-button");
+				playButton.addEventListener("click",function() {
+					if (audio.paused) {
+						playMusic();
+					} else {
+						pauseMusic();
+					}
+				});
+
+				var prevButton = document.getElementById("prev-button");
+				prevButton.addEventListener("click", prevSong);
+
+				var nextButton = document.getElementById("next-button");
+				nextButton.addEventListener("click", nextSong);
+
+				// 更新进度条
+				audio.addEventListener("timeupdate", updateProgressBar);
+
+				// 监听拖动事件
+				progressBar.addEventListener("mousemove", dragProgressBar);
+
+				document.getElementById("close-botton").addEventListener("click", function(){
+					document.getElementById("player-entirety").setAttribute("oc","close");
+				});
+
+				document.getElementById("playerOpen").addEventListener("click", function(){
+					document.getElementById("player-entirety").setAttribute("oc","open");
+				});
+	
+				localStorage.setItem("currentProgress", 0);
+			}
+	
+			// 初始化音乐播放器
+			initPlayer();
+			playMusic();
+		</script>
+	
+<script>
+// 给跳转按钮添加点击事件监听器
+document.getElementById('jump-button').addEventListener('click', function() {
+    // 定义你想要跳转的目标URL
+    var targetUrl = 'index.php';
+    
+    // 使用window.location.href进行跳转
+    window.location.href = targetUrl;
+});
+</script>
+	</div>
+	<div>
+	<object type="text/html" data="index.php" width="500" height="800"></object>
+	</div>
+	<script>
+    const particles = []; // 存储所有粒子的数组
+
+    document.addEventListener('touchstart', handleTouchStart, false);
+    document.addEventListener('touchmove', handleTouchMove, false);
+    document.addEventListener('touchend', handleTouchEnd, false);
+    document.addEventListener('click', handleClick, false); // 处理点击事件
+
+    function handleTouchStart(e) {
+      e.preventDefault();
+      for (let i = 0; i < e.touches.length; i++) {
+        createParticle(e.touches[i]);
+      }
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault();
+      // 更新粒子位置，并在新位置创建新的粒子
+      for (let i = 0; i < e.touches.length; i++) {
+        updateParticlePosition(e.touches[i]);
+        createParticle(e.touches[i], true);
+      }
+    }
+
+    function handleTouchEnd(e) {
+      // 触摸结束时，粒子将自动淡出
+    }
+
+    function handleClick(e) {
+      // 点击时创建粒子效果
+      createParticle({ clientX: e.clientX, clientY: e.clientY });
+    }
+
+    function createParticle(touch, isTail) {
+      const particle = document.createElement('span');
+      particle.className = 'particle';
+      particle.style.left = `${touch.clientX}px`;
+      particle.style.top = `${touch.clientY}px`;
+      particle.textContent = '🎂';
+      document.body.appendChild(particle);
+      particles.push(particle);
+
+      if (isTail) {
+        // 如果是拖尾粒子，设置一个定时器来移除它
+        setTimeout(() => particle.remove(), 5500); // 5.5秒后移除粒子
+      }
+    }
+
+    function updateParticlePosition(touch) {
+      // 更新最后一个粒子的位置
+      const lastParticle = particles[particles.length - 1];
+      if (lastParticle) {
+        lastParticle.style.left = `${touch.clientX}px`;
+        lastParticle.style.top = `${touch.clientY}px`;
+      }
+    }
+  </script>
+<div>
+<style>
+  #draggable {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    background-image: url('10.gif');
+    background-size: cover;
+    cursor: pointer;
+    z-index: 100;
+    top: 50%; /* 垂直方向居中 */
+    left: 50%; /* 水平方向居中 */
+    transform: translate(-50%, -50%); /* 向左和向上移动50%自身宽度和高度，实现居中 */
+  }
+  #dialogBox {
+    display: none;
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px solid #ccc;
+    background: white;
+    z-index: 200;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    text-align: center;
+  }
+  .dialog-close {
+    cursor: pointer;
+    font-size: 24px;
+    margin-top: 10px;
+  }
+</style>
+</style>
+<div id="draggable" ontouchstart="handleTouchStart(event)" ontouchmove="handleTouchMove(event)" ontouchend="handleTouchEnd(event)" onclick="showDialog()"></div>
+
+<div id="dialogBox">
+  <div class="dialog-content">
+    <span class="dialog-close" onclick="closeDialog()">&times;</span>
+    <h2>生日快乐</h2>
+    <img src="0.gif" alt="生日快乐"> <!-- 替换为你的生日快乐GIF图片路径 -->
+  </div>
+</div>
+
+<script>
+var isDragging = false;
+    var startX, startY, initialLeft, initialTop, draggable;
+
+    function handleTouchStart(event) {
+        // 单指触摸时开始拖动
+        if (event.touches.length === 1) {
+            isDragging = true;
+            startX = event.touches[0].clientX;
+            startY = event.touches[0].clientY;
+            draggable = event.currentTarget;
+            initialLeft = draggable.offsetLeft;
+            initialTop = draggable.offsetTop;
+        }
+    }
+
+    function handleTouchMove(event) {
+        // 拖动过程中
+        if (isDragging) {
+            var touchX = event.touches[0].clientX;
+            var touchY = event.touches[0].clientY;
+            var dx = touchX - startX;
+            var dy = touchY - startY;
+            draggable.style.left = (initialLeft + dx) + 'px';
+            draggable.style.top = (initialTop + dy) + 'px';
+        }
+    }
+
+    function handleTouchEnd(event) {
+        // 触摸结束，判断是否为点击操作
+        if (!isDragging) return;
+
+        var touch = event.changedTouches[0];
+        var distanceX = Math.abs(touch.clientX - startX);
+        var distanceY = Math.abs(touch.clientY - startY);
+
+        // 设置阈值，例如5px内认为是点击
+        var clickThreshold = 5;
+        if (distanceX <= clickThreshold && distanceY <= clickThreshold) {
+            showDialog();
+        }
+
+        isDragging = false;
+    }
+
+    function showDialog() {
+        // 显示弹窗的逻辑
+        var dialogBox = document.getElementById('dialogBox');
+        dialogBox.style.display = 'block';
+    }
+
+    function closeDialog() {
+        // 关闭弹窗的逻辑
+        var dialogBox = document.getElementById('dialogBox');
+        dialogBox.style.display = 'none';
+    }
+
+    // 绑定事件处理器
+    draggable = document.getElementById('draggable');
+    draggable.addEventListener('touchstart', handleTouchStart);
+    draggable.addEventListener('touchmove', handleTouchMove);
+    draggable.addEventListener('touchend', handleTouchEnd);
+
+    // 为关闭按钮添加点击事件
+    var closeBtn = document.querySelector('.dialog-close');
+    closeBtn.addEventListener('click', closeDialog);
+</script>
+
+  	<div>
+</div>
+<div>
+<style>
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+        }
+
+        #achievementPopup {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            padding: 10px;
+            text-align: center;
+            background-color: rgba(255, 215, 0, 0.9);
+            border-top-right-radius: 10px;
+            border-top-left-radius: 10px;
+            color: #333;
+            font-size: 18px;
+            animation: slideUp 0.5s forwards;
+        }
+        #achievementPopup.hide {
+            animation: slideDown 0.5s forwards;
+        }
+    </style>
+    <div id="achievementPopup">🥳恭喜你又长大一岁！🎉</div>
+
+<script>
+    window.onload = function() {
+        var popup = document.getElementById('achievementPopup');
+        
+        // 显示弹窗
+        popup.style.visibility = 'visible';
+
+        // 3秒后隐藏弹窗
+        setTimeout(function() {
+            popup.classList.add('hide');
+        }, 3000);
+    };
+</script>
+</div>
+</body>
+</html>
