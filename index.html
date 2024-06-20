@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录页面</title>
+  <style>
+    body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  /* 背景色设置为透明，以便视频可以显示 */
+  background: transparent;
+}
+
+#login-container {
+  text-align: center;
+  /* 背景设置为半透明白色 */
+  background-color: rgba(245, 245, 245, 0.6);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+input {
+  width: calc(100% - 20px);
+  padding: 15px;
+  margin-bottom: 20px;
+  /* 边框颜色加深 */
+  border: 2px solid #000080;
+  border-radius: 8px;
+  font-size: 16px;
+}
+
+button, #forgot-password, #register-link {
+  padding: 15px 30px;
+  background-color: rgba(65, 105, 225, 0.5); /* 半透明背景 */
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-right: 10px;
+  /* 移除margin-right，因为#register-link现在是内联元素 */
+}
+
+button:hover, #forgot-password:hover, #register-link:hover {
+  background-color: rgba(100, 149, 237, 0.7); /* 半透明背景 */
+}
+
+
+/* 其他样式保持不变 */
+
+/* 确保video覆盖整个屏幕，即使在小屏幕上 */
+#video-bg {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  min-width: 80%; 
+  min-height: 100%;
+  width: auto; 
+  height: auto;
+  z-index: -1;
+}
+
+    .gif-title {
+      display: block;
+      margin: 0 auto 20px; /* 居中并设置底部边距 */
+      width: 100%; /* 根据需要调整GIF的宽度 */
+      max-width: 300px; /* 设置GIF的最大宽度 */
+    }
+  </style>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
+    }
+    .particle {
+      position: absolute;
+      color: #f00; /* 粒子颜色 */
+      font-size: 24px; /* 字体大小 */
+      opacity: 0; /* 初始不透明度 */
+      transform: scale(1); /* 初始大小 */
+      animation: fadeOutAndScale 3s ease-in forwards; /* 动画持续时间5秒，ease-in淡入效果 */
+      pointer-events: none; /* 忽略粒子的鼠标事件 */
+    }
+    @keyframes fadeOutAndScale {
+      from {
+        opacity: 1;
+        transform: scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: scale(1.5); /* 淡出时放大 */
+      }
+    }
+  </style>
+</head>
+<body>
+<video autoplay muted loop id="video-bg">
+  <source src="125.mp4" type="video/mp4">
+  Your browser does not support HTML5 video.
+</video>
+  <div id="login-container">
+  
+    <h1>快开始吧</h1>
+    <h6>请耐心等待6~9秒刷新背景</h6>
+<form action="login.php" method="post">
+      <label for="username">用户名:</label>
+      <input type="text" id="username" name="username" required>
+
+      <label for="password">密码:</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">登录</button>
+      <a href="register1index.php" id="register-link">注册</a>
+    </form>
+    <p id="error-message"></p>
+  </div>
+</form>
+<script>
+    const particles = []; // 存储所有粒子的数组
+
+    document.addEventListener('touchstart', handleTouchStart, false);
+    document.addEventListener('touchmove', handleTouchMove, false);
+    document.addEventListener('touchend', handleTouchEnd, false);
+    document.addEventListener('click', handleClick, false); // 处理点击事件
+
+    function handleTouchStart(e) {
+      e.preventDefault();
+      for (let i = 0; i < e.touches.length; i++) {
+        createParticle(e.touches[i]);
+      }
+    }
+
+    function handleTouchMove(e) {
+      e.preventDefault();
+      // 更新粒子位置，并在新位置创建新的粒子
+      for (let i = 0; i < e.touches.length; i++) {
+        updateParticlePosition(e.touches[i]);
+        createParticle(e.touches[i], true);
+      }
+    }
+
+    function handleTouchEnd(e) {
+      // 触摸结束时，粒子将自动淡出
+    }
+
+    function handleClick(e) {
+      // 点击时创建粒子效果
+      createParticle({ clientX: e.clientX, clientY: e.clientY });
+    }
+
+    function createParticle(touch, isTail) {
+      const particle = document.createElement('span');
+      particle.className = 'particle';
+      particle.style.left = `${touch.clientX}px`;
+      particle.style.top = `${touch.clientY}px`;
+      particle.textContent = '🎂';
+      document.body.appendChild(particle);
+      particles.push(particle);
+
+      if (isTail) {
+        // 如果是拖尾粒子，设置一个定时器来移除它
+        setTimeout(() => particle.remove(), 5500); // 5.5秒后移除粒子
+      }
+    }
+
+    function updateParticlePosition(touch) {
+      // 更新最后一个粒子的位置
+      const lastParticle = particles[particles.length - 1];
+      if (lastParticle) {
+        lastParticle.style.left = `${touch.clientX}px`;
+        lastParticle.style.top = `${touch.clientY}px`;
+      }
+    }
+  </script>
+</body>
+</html>
